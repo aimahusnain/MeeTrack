@@ -1,4 +1,5 @@
-// src/components/AddMeetingModal.tsx
+'use client'
+
 import { useState } from 'react';
 import { Meeting, WeekData } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimeSelect } from "@/components/TimeSelect";
+import { Switch } from "@/components/ui/switch";
 import { X } from 'lucide-react';
 
 interface AddMeetingModalProps {
@@ -23,6 +25,7 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
   const [endTime, setEndTime] = useState('');
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState('bg-lime-950');
+  const [isEpt, setIsEpt] = useState(false);
 
   const colorOptions = [
     { value: 'bg-lime-950', label: 'Lime', textColor: 'text-lime-400', border: 'border-lime-500' },
@@ -58,7 +61,8 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
       startTime: startDateTime,
       endTime: endDateTime,
       description,
-      color: selectedColor
+      color: selectedColor,
+      isEpt
     };
     
     onAdd(newMeeting);
@@ -185,6 +189,18 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
               placeholder="Add meeting details..."
               rows={3}
             />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="ept-mode" 
+              checked={isEpt} 
+              onCheckedChange={setIsEpt}
+              className="data-[state=checked]:bg-yellow-600"
+            />
+            <Label htmlFor="ept-mode" className="text-zinc-300">
+              Engagement Pending Time (EPT)
+            </Label>
           </div>
           
           <DialogFooter className="gap-2 sm:gap-0">

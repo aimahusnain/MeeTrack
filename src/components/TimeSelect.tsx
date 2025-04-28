@@ -52,7 +52,7 @@ export function TimeSelect({ value, onValueChange, label }: TimeSelectProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700"
+          className="w-full justify-between bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 hover:text-zinc-50"
         >
           {selectedOption ? selectedOption.label : label}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -69,6 +69,7 @@ export function TimeSelect({ value, onValueChange, label }: TimeSelectProps) {
               {timeOptions.map((option) => (
                 <CommandItem
                   key={option.value}
+                  value={option.value}
                   onSelect={() => {
                     onValueChange(option.value)
                     setOpen(false)
@@ -89,5 +90,5 @@ export function TimeSelect({ value, onValueChange, label }: TimeSelectProps) {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

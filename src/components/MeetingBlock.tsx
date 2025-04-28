@@ -17,13 +17,17 @@ interface MeetingBlockProps {
   timeSlotHeight: number;
   overlappingMeetings: Meeting[];
   overlapIndex: number;
+  layoutType: 'single' | 'dual-horizontal' | 'triple' | 'quad';
+  layoutPosition: number; // 0-3 for position in the layout
 }
 
 export default function MeetingBlock({ 
   meeting, 
   timeSlotHeight,
   overlappingMeetings,
-  overlapIndex
+  overlapIndex,
+  layoutType,
+  layoutPosition,
 }: MeetingBlockProps) {
   const getTimePosition = (date: Date): number => {
     const hours = date.getHours();
@@ -59,10 +63,82 @@ export default function MeetingBlock({
 
   const location = "Bahria Town / Zoom";
 
-  // Calculate overlap width and position
-  const totalOverlaps = overlappingMeetings.length;
-  const overlapWidth = totalOverlaps > 0 ? 100 / totalOverlaps : 100;
-  const overlapLeft = overlapIndex * overlapWidth;
+  // Calculate position and size based on layout type
+  let width = "100%";
+  let left = "0%";
+  let height = `${baseHeight}px`;
+  let top = `${startPosition * timeSlotHeight}px`;
+  let style: React.CSSProperties = {};
+  let isCompact = false;
+
+  switch (layoutType) {
+    case 'single':
+      // Single meeting takes full width
+      width = "calc(100% - 4px)";
+      left = "2px";
+      style = {
+        top,
+        height: `${baseHeight + 2}px`,
+        minHeight: `${timeSlotHeight}px`,
+        width,
+        left,
+      };
+      break;
+      
+    case 'dual-horizontal':
+      // Two meetings stacked horizontally
+      const isTop = layoutPosition === 0;
+      height = isTop 
+        ? `${baseHeight / 2 - 2}px` 
+        : `${baseHeight / 2}px`;
+      top = isTop 
+        ? `${startPosition * timeSlotHeight}px` 
+        : `${(startPosition * timeSlotHeight) + (baseHeight / 2)}px`;
+      width = "calc(100% - 4px)";
+      left = "2px";
+      isCompact = true;
+      style = { top, height, width, left };
+      break;
+      
+    case 'triple':
+      // Improved layout for three meetings:
+      // All meetings get equal width at 33%
+      width = "calc(33.33% - 3px)";
+      
+      if (layoutPosition === 0) {
+        left = "1px";
+      } else if (layoutPosition === 1) {
+        left = "calc(33.33% + 1px)";
+      } else {
+        left = "calc(66.66% + 1px)";
+      }
+      
+      // All meetings get full height
+      height = `${baseHeight}px`;
+      isCompact = baseHeight < 80; // Only compact if relatively short
+      
+      style = { top, height, width, left };
+      break;
+      
+    case 'quad':
+      // Four meetings in a 2x2 grid
+      width = "calc(50% - 3px)";
+      height = `${baseHeight / 2 - (layoutPosition < 2 ? 2 : 0)}px`;
+      left = layoutPosition % 2 === 0 
+        ? "2px" 
+        : "calc(50% + 1px)";
+      top = layoutPosition < 2 
+        ? `${startPosition * timeSlotHeight}px` 
+        : `${(startPosition * timeSlotHeight) + (baseHeight / 2)}px`;
+      isCompact = true;
+      style = { top, height, width, left };
+      break;
+  }
+
+  const isEpt = meeting.isEpt === true;
+  
+  // Add a subtle indicator for EPT meetings
+  const eptClasses = isEpt ? 'border-dashed' : '';
 
   return (
     <MorphingDialog
@@ -73,18 +149,15 @@ export default function MeetingBlock({
       }}
     >
       <MorphingDialogTrigger
-        className={`absolute my-1 rounded-md ${colorScheme.bg} border-l-4 ${colorScheme.border} shadow-md overflow-hidden backdrop-blur-sm z-10 transition-all hover:shadow-lg group`}
-        style={{
-          top: `${startPosition * timeSlotHeight}px`,
-          height: `${baseHeight + 22}px`,
-          minHeight: `${timeSlotHeight}px`,
-          width: `calc(${overlapWidth}% - 2px)`,
-          left: `${overlapLeft}%`,
-        }}
+        className={`absolute my-1 rounded-md ${colorScheme.bg} border-l-4 ${colorScheme.border} ${eptClasses} shadow-md overflow-hidden backdrop-blur-sm z-10 transition-all hover:shadow-lg group`}
+        style={style}
       >
         {/* Top Header */}
         <div className={`w-full ${colorScheme.dark} px-2 py-1`}>
-          <p className={`text-xs font-medium ${colorScheme.darkText} truncate`}>Muhammad Husnain</p>
+          <p className={`text-xs font-medium ${colorScheme.darkText} truncate flex items-center`}>
+            <span className="truncate">Muhammad Husnain</span>
+            {isEpt && <span className="ml-auto text-xs bg-yellow-600 px-1 rounded">EPT</span>}
+          </p>
         </div>
 
         {/* Content */}
@@ -97,8 +170,8 @@ export default function MeetingBlock({
               </p>
             </MorphingDialogTitle>
 
-            {/* Time badge */}
-            {!isShortMeeting && (
+            {/* Time badge - hide in compact mode */}
+            {!isCompact && !isShortMeeting && (
               <MorphingDialogSubtitle>
                 <span className="text-xs bg-zinc-900/60 rounded-md px-1.5 py-0.5 text-zinc-300">
                   {startTimeDisplay} - {endTimeDisplay}
@@ -107,28 +180,31 @@ export default function MeetingBlock({
             )}
           </div>
 
-          {/* Description */}
-          {baseHeight > 48 && meeting.description && (
+          {/* Description - hide in compact mode */}
+          {!isCompact && baseHeight > 48 && meeting.description && (
             <p className="text-xs text-zinc-300 mt-1 line-clamp-2 overflow-hidden">
               {meeting.description}
             </p>
           )}
 
-          {/* Footer */}
-          <div className="flex justify-between items-center mt-auto">
-            <span className="text-xs text-zinc-400 truncate">{location}</span>
-          </div>
+          {/* Footer - hide in compact mode */}
+          {!isCompact && (
+            <div className="flex justify-between items-center mt-auto">
+              <span className="text-xs text-zinc-400 truncate">{location}</span>
+            </div>
+          )}
         </div>
       </MorphingDialogTrigger>
 
       <MorphingDialogContainer>
         <MorphingDialogContent
-          className={`pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border ${colorScheme.border} ${colorScheme.bg} rounded-lg shadow-xl max-w-md`}
+          className={`pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border ${colorScheme.border} ${eptClasses} ${colorScheme.bg} rounded-lg shadow-xl max-w-md`}
         >
           {/* Dialog Header */}
           <div className={`w-full ${colorScheme.dark} px-4 py-3`}>
-            <MorphingDialogTitle className="text-lg font-bold text-white">
-              {meeting.name}
+            <MorphingDialogTitle className="text-lg font-bold text-white flex items-center justify-between">
+              <span>{meeting.name}</span>
+              {isEpt && <span className="text-xs bg-yellow-600 px-2 py-1 rounded">Engagement Pending Time</span>}
             </MorphingDialogTitle>
           </div>
           
@@ -144,6 +220,11 @@ export default function MeetingBlock({
               <p className="text-sm text-zinc-300">
                 <strong>Location:</strong> {location}
               </p>
+              {isEpt && (
+                <p className="text-sm text-yellow-400">
+                  <strong>Status:</strong> Engagement Pending (awaiting confirmation)
+                </p>
+              )}
             </MorphingDialogSubtitle>
             
             {meeting.description && (

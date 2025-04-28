@@ -37,47 +37,83 @@ export default function Calendar({ weeks, meetings, currentWeek, setCurrentWeek 
     return meetingA.startTime < meetingB.endTime && meetingA.endTime > meetingB.startTime;
   };
 
-  // Group meetings into overlap groups
-  const groupOverlappingMeetings = (dayMeetings: Meeting[]): Map<string, Meeting[]> => {
-    const overlapGroups = new Map<string, Meeting[]>();
+  // Determine layout type based on number of meetings
+  const getLayoutType = (meetingCount: number) => {
+    switch (meetingCount) {
+      case 1: return 'single';
+      case 2: return 'dual-horizontal';
+      case 3: return 'triple';
+      case 4: return 'quad';
+      default: return 'single'; // Default to regular layout for more than 4
+    }
+  };
+
+  // Group meetings that occur at the same time period
+  const groupOverlappingMeetings = (dayMeetings: Meeting[]): Meeting[][] => {
+    if (dayMeetings.length <= 1) return [dayMeetings];
     
-    // Sort meetings by start time (and then by end time for equal start times)
-    const sortedMeetings = [...dayMeetings].sort((a, b) => {
-      const startDiff = a.startTime.getTime() - b.startTime.getTime();
-      if (startDiff === 0) {
-        return a.endTime.getTime() - b.endTime.getTime();
-      }
-      return startDiff;
-    });
+    // If we have 2-4 meetings for the day, apply our special layouts
+    if (dayMeetings.length >= 2 && dayMeetings.length <= 4) {
+      return [dayMeetings];
+    }
     
-    // Process each meeting in the sorted order
+    // For more than 4 meetings, use traditional overlap detection
+    const groups: Meeting[][] = [];
+    const assigned = new Set<string>();
+    
+    // Sort meetings by start time
+    const sortedMeetings = [...dayMeetings].sort(
+      (a, b) => a.startTime.getTime() - b.startTime.getTime()
+    );
+    
     for (const meeting of sortedMeetings) {
-      // Check if the meeting overlaps with any existing groups
-      let foundGroup = false;
+      if (assigned.has(meeting.id)) continue;
       
-      for (const [groupId, groupMeetings] of overlapGroups.entries()) {
-        // Check if the current meeting overlaps with any meeting in the group
-        const overlapsWithGroup = groupMeetings.some(groupMeeting => 
-          doMeetingsOverlap(meeting, groupMeeting)
+      const group = [meeting];
+      assigned.add(meeting.id);
+      
+      for (const otherMeeting of sortedMeetings) {
+        if (assigned.has(otherMeeting.id)) continue;
+        
+        // Check if this meeting overlaps with any in the current group
+        const hasOverlap = group.some(groupMeeting => 
+          doMeetingsOverlap(groupMeeting, otherMeeting)
         );
         
-        if (overlapsWithGroup) {
-          // Add the meeting to this group
-          overlapGroups.set(groupId, [...groupMeetings, meeting]);
-          foundGroup = true;
-          break;
+        if (hasOverlap) {
+          group.push(otherMeeting);
+          assigned.add(otherMeeting.id);
         }
       }
       
-      // If the meeting doesn't overlap with any existing group, create a new group
-      if (!foundGroup) {
-        const groupId = `group_${overlapGroups.size + 1}`;
-        overlapGroups.set(groupId, [meeting]);
-      }
+      groups.push(group);
     }
     
-    return overlapGroups;
+    return groups;
   };
+
+  // Filter EPT meetings for the current week - FIX: Added null check for weeks[weekIdx]
+  const getEptMeetingsForWeek = (weekIdx: number): Meeting[] => {
+    if (!isDisplayedWeek(weekIdx) || !weeks[weekIdx]) return [];
+    
+    const week = weeks[weekIdx];
+    const weekStart = new Date(week.startDate);
+    const weekEnd = new Date(week.endDate);
+    weekEnd.setHours(23, 59, 59, 999); // End of the last day
+    
+    return meetings.filter(meeting => {
+      const meetingDate = new Date(meeting.date);
+      return meetingDate >= weekStart && 
+             meetingDate <= weekEnd && 
+             meeting.isEpt === true;
+    });
+  };
+  
+  // Get all EPT meetings for the currently displayed week
+  // FIX: Ensure currentWeek is valid and weeks array has items
+  const eptMeetings = weeks.length > 0 && currentWeek >= 0 && currentWeek < weeks.length
+    ? getEptMeetingsForWeek(currentWeek) 
+    : [];
 
   const todayDate = new Date().toDateString();
 
@@ -111,81 +147,159 @@ export default function Calendar({ weeks, meetings, currentWeek, setCurrentWeek 
         </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="flex border border-zinc-800 rounded-lg overflow-hidden shadow-lg bg-zinc-900">
-        {/* Time column */}
-        <TimeColumn timeSlots={timeSlots} timeSlotHeight={TIME_SLOT_HEIGHT} />
-        
-        {/* Days columns */}
-        {weeks.map((week, weekIdx) => (
-          isDisplayedWeek(weekIdx) && (
-            <div key={week.weekNumber} className="flex flex-1 overflow-x-auto">
-              {Array.from({ length: 7 }, (_, dayIdx) => {
-                const dayDate = new Date(week.startDate);
-                dayDate.setDate(dayDate.getDate() + dayIdx);
-                
-                const dayMeetings = meetings.filter(meeting => {
-                  const meetingDate = new Date(meeting.date);
-                  return meetingDate.toDateString() === dayDate.toDateString();
-                });
+      {/* Calendar grid - FIX: Check if weeks array has data */}
+      {weeks.length > 0 ? (
+        <div className="flex border border-zinc-800 rounded-lg overflow-hidden shadow-lg bg-zinc-900">
+          {/* Time column */}
+          <TimeColumn timeSlots={timeSlots} timeSlotHeight={TIME_SLOT_HEIGHT} />
+          
+          {/* Days columns */}
+          {weeks.map((week, weekIdx) => (
+            isDisplayedWeek(weekIdx) && (
+              <div key={week.weekNumber} className="flex flex-1 overflow-x-auto">
+                {Array.from({ length: 7 }, (_, dayIdx) => {
+                  const dayDate = new Date(week.startDate);
+                  dayDate.setDate(dayDate.getDate() + dayIdx);
+                  
+                  const dayMeetings = meetings.filter(meeting => {
+                    const meetingDate = new Date(meeting.date);
+                    return meetingDate.toDateString() === dayDate.toDateString() && !meeting.isEpt;
+                  });
 
-                // Group overlapping meetings
-                const overlapGroups = groupOverlappingMeetings(dayMeetings);
+                  // Group meetings for this day
+                  const meetingGroups = groupOverlappingMeetings(dayMeetings);
 
-                const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
-                const isToday = todayDate === dayDate.toDateString();
-                
-                return (
-                  <div key={dayIdx} className="flex-1 min-w-[120px] relative border-l border-zinc-800">
-                    {/* Day header */}
-                    <div className={`h-16 sticky top-0 z-10 ${isToday ? 'bg-lime-900/30' : 'bg-zinc-900'} border-b border-zinc-800 px-2 flex flex-col justify-center items-center`}>
-                      <p className={`font-medium ${isToday ? 'text-lime-400' : 'text-zinc-200'}`}>{dayName}</p>
-                      <div className={`text-sm mt-0.5 ${isToday ? 'bg-lime-700 text-lime-100 px-2 rounded-full' : 'text-zinc-400'}`}>
-                        {formatDate(dayDate)}
+                  const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
+                  const isToday = todayDate === dayDate.toDateString();
+                  
+                  return (
+                    <div key={dayIdx} className="flex-1 min-w-[120px] relative border-l border-zinc-800">
+                      {/* Day header */}
+                      <div className={`h-16 sticky top-0 z-10 ${isToday ? 'bg-lime-900/30' : 'bg-zinc-900'} border-b border-zinc-800 px-2 flex flex-col justify-center items-center`}>
+                        <p className={`font-medium ${isToday ? 'text-lime-400' : 'text-zinc-200'}`}>{dayName}</p>
+                        <div className={`text-sm mt-0.5 ${isToday ? 'bg-lime-700 text-lime-100 px-2 rounded-full' : 'text-zinc-400'}`}>
+                          {formatDate(dayDate)}
+                        </div>
+                      </div>
+                      
+                      {/* Time slots */}
+                      <div className="relative">
+                        {timeSlots.map((time, i) => {
+                          const isHalfHour = time.endsWith('30');
+                          const isFullHour = time.endsWith('00');
+                          
+                          return (
+                            <div 
+                              key={i} 
+                              style={{ height: `${TIME_SLOT_HEIGHT}px` }}
+                              className={`${
+                                isFullHour 
+                                  ? 'border-b border-zinc-700 bg-zinc-800/20' 
+                                  : isHalfHour 
+                                    ? 'border-b border-zinc-800' 
+                                    : 'border-b border-zinc-800/50'
+                              }`}
+                            />
+                          );
+                        })}
+                        
+                        {/* Render meeting groups */}
+                        {meetingGroups.map((group, groupIndex) => {
+                          // Determine layout type based on number of meetings in this group
+                          const layoutType = getLayoutType(group.length);
+                          
+                          return group.map((meeting, meetingIndex) => (
+                            <MeetingBlock 
+                              key={meeting.id} 
+                              meeting={meeting}
+                              timeSlotHeight={TIME_SLOT_HEIGHT}
+                              overlappingMeetings={group}
+                              overlapIndex={meetingIndex}
+                              layoutType={layoutType as any}
+                              layoutPosition={meetingIndex}
+                            />
+                          ));
+                        })}
                       </div>
                     </div>
-                    
-                    {/* Time slots */}
-                    <div className="relative">
-                      {timeSlots.map((time, i) => {
-                        const isHalfHour = time.endsWith('30');
-                        const isFullHour = time.endsWith('00');
-                        
-                        return (
-                          <div 
-                            key={i} 
-                            style={{ height: `${TIME_SLOT_HEIGHT}px` }}
-                            className={`${
-                              isFullHour 
-                                ? 'border-b border-zinc-700 bg-zinc-800/20' 
-                                : isHalfHour 
-                                  ? 'border-b border-zinc-800' 
-                                  : 'border-b border-zinc-800/50'
-                            }`}
-                          />
-                        );
-                      })}
-                      
-                      {/* Render meetings, handling overlaps */}
-                      {Array.from(overlapGroups.values()).map(groupMeetings => (
-                        groupMeetings.map((meeting, index) => (
-                          <MeetingBlock 
-                            key={meeting.id} 
-                            meeting={meeting} 
-                            timeSlotHeight={TIME_SLOT_HEIGHT}
-                            overlappingMeetings={groupMeetings}
-                            overlapIndex={index}
-                          />
-                        ))
-                      ))}
+                  );
+                })}
+              </div>
+            )
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-48 bg-zinc-900 rounded-lg border border-zinc-800">
+          <p className="text-zinc-400">No calendar data available. Please select a month and year.</p>
+        </div>
+      )}
+
+      {/* EPT Section */}
+      {eptMeetings.length > 0 && (
+        <div className="mt-8">
+          <h2 className="font-semibold text-xl text-yellow-400 flex items-center mb-4">
+            <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+            Engagement Pending Time (EPT)
+          </h2>
+          
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {eptMeetings.map(meeting => {
+              const meetingDate = new Date(meeting.date);
+              const dayName = meetingDate.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayDate = formatDate(meetingDate);
+              
+              // Get formatted times
+              const startTime = meeting.startTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false 
+              });
+              
+              const endTime = meeting.endTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false 
+              });
+              
+              // Get color scheme based on meeting ID
+              const colors = [
+                { bg: 'bg-lime-950', border: 'border-lime-500', text: 'text-lime-400' },
+                { bg: 'bg-indigo-950', border: 'border-indigo-500', text: 'text-indigo-400' },
+                { bg: 'bg-amber-950', border: 'border-amber-500', text: 'text-amber-400' },
+                { bg: 'bg-emerald-950', border: 'border-emerald-500', text: 'text-emerald-400' },
+                { bg: 'bg-violet-950', border: 'border-violet-500', text: 'text-violet-400' },
+                { bg: 'bg-rose-950', border: 'border-rose-500', text: 'text-rose-400' },
+                { bg: 'bg-cyan-950', border: 'border-cyan-500', text: 'text-cyan-400' },
+              ];
+              
+              const colorIndex = parseInt(meeting.id.slice(-1), 16) % colors.length;
+              const colorScheme = colors[colorIndex];
+              
+              return (
+                <div 
+                  key={meeting.id}
+                  className={`${colorScheme.bg} border-l-4 ${colorScheme.border} border-dashed rounded-md shadow-md overflow-hidden`}
+                >
+                  {/* Meeting card with EPT styling */}
+                  <div className="p-3">
+                    <h3 className={`font-medium ${colorScheme.text}`}>{meeting.name}</h3>
+                    <div className="mt-2 flex items-center text-sm text-zinc-300">
+                      <span className="bg-yellow-600 text-yellow-100 text-xs px-1.5 rounded mr-2">EPT</span>
+                      <span>{dayName}, {dayDate}</span>
                     </div>
+                    <div className="mt-1 text-sm text-zinc-400">
+                      {startTime} - {endTime}
+                    </div>
+                    {meeting.description && (
+                      <p className="mt-2 text-sm text-zinc-300 line-clamp-2">{meeting.description}</p>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          )
-        ))}
-      </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

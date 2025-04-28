@@ -7,6 +7,7 @@ export interface Meeting {
   endTime: Date;
   description?: string;
   color?: string;
+  isEpt?: boolean; // Flag for Engagement Pending Time
 }
 
 export type WeekData = {
