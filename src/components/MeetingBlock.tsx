@@ -1,7 +1,16 @@
 'use client';
-import { useState } from 'react';
 import { Meeting } from '@/types';
 import { X } from 'lucide-react';
+import {
+  MorphingDialog,
+  MorphingDialogTrigger,
+  MorphingDialogContent,
+  MorphingDialogTitle,
+  MorphingDialogSubtitle,
+  MorphingDialogClose,
+  MorphingDialogDescription,
+  MorphingDialogContainer,
+} from '@/components/ui/morphing-dialog';
 
 interface MeetingBlockProps {
   meeting: Meeting;
@@ -16,8 +25,6 @@ export default function MeetingBlock({
   overlappingMeetings,
   overlapIndex
 }: MeetingBlockProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   const getTimePosition = (date: Date): number => {
     const hours = date.getHours();
     const minutes = date.getMinutes();
@@ -58,11 +65,15 @@ export default function MeetingBlock({
   const overlapLeft = overlapIndex * overlapWidth;
 
   return (
-    <>
-      {/* Meeting Block - visible when not expanded */}
-      <div
-        onClick={() => setIsOpen(true)}
-        className={`absolute my-1 rounded-md ${colorScheme.bg} border-l-4 ${colorScheme.border} shadow-md overflow-hidden backdrop-blur-sm z-10 transition-all hover:shadow-lg group cursor-pointer`}
+    <MorphingDialog
+      transition={{
+        type: 'spring',
+        bounce: 0.05,
+        duration: 0.25,
+      }}
+    >
+      <MorphingDialogTrigger
+        className={`absolute my-1 rounded-md ${colorScheme.bg} border-l-4 ${colorScheme.border} shadow-md overflow-hidden backdrop-blur-sm z-10 transition-all hover:shadow-lg group`}
         style={{
           top: `${startPosition * timeSlotHeight}px`,
           height: `${baseHeight + 22}px`,
@@ -80,22 +91,19 @@ export default function MeetingBlock({
         <div className="p-2 h-full overflow-hidden flex flex-col">
           <div className="flex flex-col gap-1">
             {/* Title */}
-            <div className="relative w-full group">
+            <MorphingDialogTitle>
               <p className={`text-sm font-medium ${colorScheme.text} truncate`} title={meeting.name}>
                 {meeting.name}
               </p>
-              <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-20">
-                <div className="bg-zinc-800 text-white text-xs p-1 rounded shadow-lg max-w-xs whitespace-normal">
-                  {meeting.name}
-                </div>
-              </div>
-            </div>
+            </MorphingDialogTitle>
 
             {/* Time badge */}
             {!isShortMeeting && (
-              <span className="text-xs bg-zinc-900/60 rounded-md px-1.5 py-0.5 text-zinc-300">
-                {startTimeDisplay} - {endTimeDisplay}
-              </span>
+              <MorphingDialogSubtitle>
+                <span className="text-xs bg-zinc-900/60 rounded-md px-1.5 py-0.5 text-zinc-300">
+                  {startTimeDisplay} - {endTimeDisplay}
+                </span>
+              </MorphingDialogSubtitle>
             )}
           </div>
 
@@ -107,59 +115,57 @@ export default function MeetingBlock({
           )}
 
           {/* Footer */}
-          <div className="flex items-center mt-auto">
+          <div className="flex justify-between items-center mt-auto">
             <span className="text-xs text-zinc-400 truncate">{location}</span>
           </div>
         </div>
-      </div>
+      </MorphingDialogTrigger>
 
-      {/* Modal Dialog - visible when expanded */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setIsOpen(false)}>
-          <div 
-            className={`w-11/12 max-w-md bg-zinc-900 text-white shadow-xl rounded-lg p-6 border ${colorScheme.border}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">{meeting.name}</h2>
-              <button 
-                onClick={() => setIsOpen(false)} 
-                className="p-1 rounded-full hover:bg-zinc-800"
-              >
-                <X size={20} className="text-zinc-400 hover:text-white" />
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex">
-                <div className="w-24 text-sm font-medium text-zinc-400">Organizer:</div>
-                <div className="text-sm text-zinc-300">Muhammad Husnain</div>
-              </div>
-              
-              <div className="flex">
-                <div className="w-24 text-sm font-medium text-zinc-400">Time:</div>
-                <div className="text-sm text-zinc-300">
-                  {startTimeDisplay} - {endTimeDisplay}
-                </div>
-              </div>
-              
-              <div className="flex">
-                <div className="w-24 text-sm font-medium text-zinc-400">Location:</div>
-                <div className="text-sm text-zinc-300">{location}</div>
-              </div>
-            </div>
+      <MorphingDialogContainer>
+        <MorphingDialogContent
+          className={`pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border ${colorScheme.border} ${colorScheme.bg} rounded-lg shadow-xl max-w-md`}
+        >
+          {/* Dialog Header */}
+          <div className={`w-full ${colorScheme.dark} px-4 py-3`}>
+            <MorphingDialogTitle className="text-lg font-bold text-white">
+              {meeting.name}
+            </MorphingDialogTitle>
+          </div>
+          
+          {/* Dialog Content */}
+          <div className="p-4 flex flex-col space-y-4">
+            <MorphingDialogSubtitle className="flex flex-col space-y-2">
+              <p className="text-sm text-zinc-300">
+                <strong>By:</strong> Muhammad Husnain
+              </p>
+              <p className="text-sm text-zinc-300">
+                <strong>Time:</strong> {startTimeDisplay} - {endTimeDisplay}
+              </p>
+              <p className="text-sm text-zinc-300">
+                <strong>Location:</strong> {location}
+              </p>
+            </MorphingDialogSubtitle>
             
             {meeting.description && (
-              <div className="pt-4 border-t border-zinc-800 mt-4">
-                <div className="text-sm font-medium text-zinc-400 mb-2">Description:</div>
-                <div className="text-sm text-zinc-200 whitespace-pre-wrap">
-                  {meeting.description}
-                </div>
-              </div>
+              <MorphingDialogDescription
+                disableLayoutAnimation
+                variants={{
+                  initial: { opacity: 0, scale: 0.95, y: 20 },
+                  animate: { opacity: 1, scale: 1, y: 0 },
+                  exit: { opacity: 0, scale: 0.95, y: 20 },
+                }}
+                className="text-sm text-zinc-200 whitespace-pre-wrap border-t border-zinc-700 pt-4"
+              >
+                {meeting.description}
+              </MorphingDialogDescription>
             )}
           </div>
-        </div>
-      )}
-    </>
+          
+          <MorphingDialogClose className="absolute top-3 right-3 text-zinc-400 hover:text-white">
+            <X size={20} />
+          </MorphingDialogClose>
+        </MorphingDialogContent>
+      </MorphingDialogContainer>
+    </MorphingDialog>
   );
 }
