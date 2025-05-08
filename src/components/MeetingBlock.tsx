@@ -157,100 +157,126 @@ export default function MeetingBlock({
 
   const useTwoColumnLayout = layoutType === "dual-horizontal" && !isShortMeeting && height >= 80 && !isDivided
 
-  // Modern professional info button component
-  // Modern professional info button component with close button
-  const InfoButton = () => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          className="absolute bottom-1 right-1 p-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white shadow-md z-30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ScanEye className="h-4 w-4" />
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md border-0 p-0 shadow-lg rounded-lg overflow-hidden bg-white">
-        <DialogHeader
-          className={`${bgColor} ${getTextColor(bgColor)} px-6 py-4 border-b border-zinc-800 flex justify-between items-center`}
-        >
-          <DialogTitle className="text-lg font-medium">{meeting.name}</DialogTitle>
-        </DialogHeader>
-        <div className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Starting Time</p>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.startTime)}</span>
+ // Modern professional info button component with 3-column grid layout
+const InfoButton = () => (
+  <Dialog>
+    <DialogTrigger asChild>
+      <button
+        className="absolute bottom-2 right-2 p-1 rounded-md bg-zinc-800/50 backdrop-blur-xl hover:bg-zinc-700 text-white shadow-lg z-30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ScanEye className="h-3 w-3" />
+      </button>
+    </DialogTrigger>
+    <DialogContent className="sm:max-w-lg border-0 p-0 shadow-xl rounded-xl overflow-hidden bg-white" dir="rtl">
+      {/* Header */}
+      <div className={`${bgColor} ${getTextColor(bgColor)} px-5 py-4 flex justify-between items-center`}>
+        <DialogTitle className="text-lg font-medium">{meeting.name}</DialogTitle>
+        <DialogClose className="rounded-full p-1 hover:bg-white/20 transition-colors">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </DialogClose>
+      </div>
+      
+      {/* 3-column grid layout content */}
+      <div className="p-5">
+        <div className="grid grid-cols-3 gap-4">
+          {/* First column with 2 rows */}
+          <div className="space-y-4">
+            {/* First row - Organizer */}
+            {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" ? (
+              <div className="bg-zinc-50 p-3 rounded-lg">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">المنظّم</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{meeting.organizer}</span>
+                  <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Ending Time</p>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.endTime)}</span>
+            ) : null}
+            
+            {/* Second row - Location */}
+            {meeting.location && (
+              <div className="bg-zinc-50 p-3 rounded-lg">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">الموقع</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{meeting.location}</span>
+                  <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-
-          <div className="h-px bg-zinc-200"></div>
-
-          {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" ? (
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Organizer</p>
-              <div className="flex items-center">
-                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 mr-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
+          
+          {/* Second column spanning 2 columns with time information */}
+          <div className="col-span-2">
+            <div className="bg-zinc-50 p-4 rounded-lg h-full">
+              <div className="flex flex-col justify-center h-full">
+                <div className="mb-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت البدء</p>
+                  <div className="flex items-center justify-end">
+                    <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.startTime)}</span>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-zinc-900">{meeting.organizer}</span>
+                
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت الانتهاء</p>
+                  <div className="flex items-center justify-end">
+                    <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.endTime)}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          ) : null}
-
-          {meeting.location && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Location</p>
-              <div className="flex items-center">
-                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 mr-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-zinc-900">{meeting.location}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="pt-3 flex justify-end">
-            <DialogClose className="px-4 py-2 text-xs font-medium text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
-              Close
-            </DialogClose>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
-  )
+        
+        {/* Close button */}
+        <div className="mt-5 flex justify-end">
+          <DialogClose className="px-4 py-2 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+            إغلاق
+          </DialogClose>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 
   if (isShortMeeting) {
     return (
@@ -406,7 +432,7 @@ export default function MeetingBlock({
           }`}
         >
           <div
-            className={`w-14 p-1  flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}
+            className={`w-14 p-1 pt-3 flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}
           >
             <div className="text-[10px] text-black whitespace-nowrap">{formatTime(meeting.startTime)}</div>
             <div className="text-[10px] text-black whitespace-nowrap mt-1">{formatTime(meeting.endTime)}</div>

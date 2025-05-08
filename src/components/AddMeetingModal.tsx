@@ -134,7 +134,7 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="bg-zinc-100 border-zinc-200 sm:max-w-md">
+      <DialogContent className="bg-zinc-100 border-zinc-200 md:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center justify-between">
             إضافة اجتماع جديد
@@ -266,7 +266,7 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
             </Label>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 md:gap-0">
             <Button
               type="button"
               variant="outline"

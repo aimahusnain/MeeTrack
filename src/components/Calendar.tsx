@@ -122,7 +122,7 @@ export default function Calendar({ week, meetings, arabicDates = [] }: CalendarP
   })
 
   return (
-    <div className="flex flex-col mt-6">
+    <div className="flex flex-col md:mt-2">
       {/* Calendar grid */}
       <div className="flex border border-zinc-200 rounded-lg overflow-hidden shadow-lg bg-white">
         {/* Time column - moved to right side */}
@@ -148,7 +148,7 @@ export default function Calendar({ week, meetings, arabicDates = [] }: CalendarP
             const isTodayDate = todayDate === dayDate.toDateString()
 
             return (
-              <div key={dayIdx} className="flex-1 sm:min-w-[120px] min-w-[250px] relative border-l border-zinc-200">
+              <div key={dayIdx} className="flex-1 md:min-w-[120px] min-w-[250px] relative border-l border-zinc-200">
                 {/* Day header */}
                 <div
                   className={`h-16 sticky top-0 z-10 ${

@@ -291,7 +291,7 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="bg-white border-zinc-100 sm:max-w-2xl">
+      <DialogContent className="bg-white border-zinc-100 md:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center justify-between">
             استيراد الاجتماعات
@@ -371,7 +371,7 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 md:gap-0">
           <Button
             type="button"
             variant="outline"
