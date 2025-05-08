@@ -17,7 +17,7 @@ export default function TimeColumn({ timeSlots, timeSlotHeight }: TimeColumnProp
   }
 
   return (
-    <div className="w-16 sm:w-32 bg-[#025F5F] flex-shrink-0">
+    <div className="w-24 sm:w-32 bg-[#025F5F] flex-shrink-0">
       <div className="h-16"></div> {/* Spacer for day header */}
       <div>
         {timeSlots.map((time, i) => {

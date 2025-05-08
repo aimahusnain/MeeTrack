@@ -406,7 +406,7 @@ export default function MeetingBlock({
           }`}
         >
           <div
-            className={`w-14 p-1 pt-3 flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}
+            className={`w-14 p-1  flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}
           >
             <div className="text-[10px] text-black whitespace-nowrap">{formatTime(meeting.startTime)}</div>
             <div className="text-[10px] text-black whitespace-nowrap mt-1">{formatTime(meeting.endTime)}</div>
