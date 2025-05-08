@@ -152,11 +152,11 @@ export default function Calendar({ week, meetings, arabicDates = [] }: CalendarP
                 {/* Day header */}
                 <div
                   className={`h-16 sticky top-0 z-10 ${
-                    isTodayDate ? "bg-lime-100/30" : "bg-zinc-100"
+                    isTodayDate ? "bg-[#025F5F]/80" : "bg-[#025F5F]"
                   } border-b border-zinc-200 px-2 flex flex-col justify-center items-center`}
                 >
-                  <p className={`font-medium ${isTodayDate ? "text-[#009531]" : "text-zinc-800"}`}>{dayName}</p>
-                  <p className={`text-sm ${isTodayDate ? "text-[#009531]" : "text-zinc-400"}`}>{formatDate(dayDate)}</p>
+                  <p className="font-medium text-white">{dayName}</p>
+                  <p className="text-sm text-zinc-200">{formatDate(dayDate)}</p>
                 </div>
 
                 {/* Time slots */}

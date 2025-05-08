@@ -149,7 +149,9 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
         // Extract data from columns based on the expected format
         const meetingType = row[1] // النوع
         const meetingTitle = row[2] // عنوان الاجتماع
-        const organizer = row[3] // المنظم
+        // Ensure organizer is properly extracted from column D (index 3)
+        const organizer = row[3] !== undefined && row[3] !== "" ? String(row[3]) : "غير متوفر"
+        console.log(`Row ${index}: Organizer from column D:`, organizer)
         const dateValue = row[4] // التاريخ (Excel serial number or string)
         const startTimeValue = row[5] // وقت البدء (Excel fraction or string)
         const endTimeValue = row[6] // وقت النهاية (Excel fraction or string)
@@ -220,7 +222,7 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
           startTime,
           endTime,
           description: meetingType !== undefined ? String(meetingType) : "",
-          organizer: organizer !== undefined ? String(organizer) : "غير متوفر",
+          organizer, // Already handled above
           location: location !== undefined ? String(location) : "",
           color: colorClass,
           isEpt: needsPreparation === "نعم" || needsPreparation === true,

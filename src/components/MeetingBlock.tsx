@@ -1,5 +1,8 @@
+"use client"
+
 import type { Meeting } from "@/types"
-import { Clock, MapPin, User } from "lucide-react"
+import { Clock, ScanEye, MapPin, User } from "lucide-react"
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
 
 interface MeetingBlockProps {
   meeting: Meeting
@@ -18,6 +21,64 @@ export default function MeetingBlock({
   availableWidth,
   totalMeetings = 1,
 }: MeetingBlockProps) {
+  // Replace with this new implementation that only considers very light colors
+  const isVeryLightColor = (color: string): boolean => {
+    // Extract the color name from the Tailwind class
+    const colorMatch = color.match(/bg-\[#([0-9A-Fa-f]{6})\]/) || color.match(/bg-([a-z]+-[0-9]+)/)
+
+    if (!colorMatch) return false
+
+    // If it's a hex color
+    if (colorMatch && (colorMatch[1].startsWith("#") || colorMatch[0].includes("[#"))) {
+      const hex = colorMatch[1].replace("#", "")
+      // Convert hex to RGB
+      const r = Number.parseInt(hex.substring(0, 2), 16)
+      const g = Number.parseInt(hex.substring(2, 4), 16)
+      const b = Number.parseInt(hex.substring(4, 6), 16)
+
+      // Calculate relative luminance
+      // Using the formula: 0.299*R + 0.587*G + 0.114*B
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+      // Only return true for very light colors (luminance > 0.75)
+      return luminance > 0.75
+    }
+
+    // For Tailwind color classes - only include the lightest variants
+    const veryLightColors = [
+      "bg-white",
+      "bg-zinc-100",
+      "bg-gray-100",
+      "bg-slate-100",
+      "bg-amber-100",
+      "bg-yellow-100",
+      "bg-lime-100",
+      "bg-green-100",
+      "bg-emerald-100",
+      "bg-teal-100",
+      "bg-cyan-100",
+      "bg-sky-100",
+      "bg-blue-100",
+      "bg-indigo-100",
+      "bg-violet-100",
+      "bg-purple-100",
+      "bg-fuchsia-100",
+      "bg-pink-100",
+      "bg-rose-100",
+      "bg-orange-100",
+      "bg-red-100",
+      // Add specific colors that should have black text
+      "bg-[#C8EEFD]", // Light blue color from your constants
+    ]
+
+    return veryLightColors.some((lightColor) => color.includes(lightColor))
+  }
+
+  // Get text color based on background color
+  const getTextColor = (bgColor: string): string => {
+    return isVeryLightColor(bgColor) ? "text-black" : "text-white"
+  }
+
   let topPosition: number
   let height: number
   let durationInMinutes = 0
@@ -96,6 +157,101 @@ export default function MeetingBlock({
 
   const useTwoColumnLayout = layoutType === "dual-horizontal" && !isShortMeeting && height >= 80 && !isDivided
 
+  // Modern professional info button component
+  // Modern professional info button component with close button
+  const InfoButton = () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className="absolute bottom-1 right-1 p-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white shadow-md z-30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ScanEye className="h-4 w-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md border-0 p-0 shadow-lg rounded-lg overflow-hidden bg-white">
+        <DialogHeader
+          className={`${bgColor} ${getTextColor(bgColor)} px-6 py-4 border-b border-zinc-800 flex justify-between items-center`}
+        >
+          <DialogTitle className="text-lg font-medium">{meeting.name}</DialogTitle>
+        </DialogHeader>
+        <div className="px-6 py-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Starting Time</p>
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.startTime)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Ending Time</p>
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.endTime)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-px bg-zinc-200"></div>
+
+          {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" ? (
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Organizer</p>
+              <div className="flex items-center">
+                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 mr-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-zinc-900">{meeting.organizer}</span>
+              </div>
+            </div>
+          ) : null}
+
+          {meeting.location && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Location</p>
+              <div className="flex items-center">
+                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 mr-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-zinc-900">{meeting.location}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-3 flex justify-end">
+            <DialogClose className="px-4 py-2 text-xs font-medium text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+              Close
+            </DialogClose>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (isShortMeeting) {
     return (
       <div
@@ -108,8 +264,11 @@ export default function MeetingBlock({
         }}
       >
         <div className="flex items-center justify-center h-full w-full">
-          <h3 className="font-medium text-xs text-white px-1 text-center break-words">{meeting.name}</h3>
+          <h3 className={`font-medium text-xs ${getTextColor(bgColor)} px-1 text-center break-words`}>
+            {meeting.name}
+          </h3>
         </div>
+        <InfoButton />
       </div>
     )
   } else if (useTwoColumnLayout) {
@@ -133,7 +292,7 @@ export default function MeetingBlock({
               <span className="break-words">{formatTimeRange()}</span>
             </div>
             <div className="flex flex-wrap gap-x-3 mt-auto">
-              {meeting.organizer && (
+              {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" && (
                 <div className="flex items-center text-xs text-zinc-500">
                   <User className="h-3 w-3 ml-1 flex-shrink-0" />
                   <span className="break-words">{meeting.organizer}</span>
@@ -148,6 +307,7 @@ export default function MeetingBlock({
             </div>
           </div>
         </div>
+        <InfoButton />
       </div>
     )
   } else if (isDivided && !isSmallBlock) {
@@ -162,7 +322,7 @@ export default function MeetingBlock({
         }}
       >
         <div className={`w-full ${bgColor} py-1 px-2`}>
-          <h3 className="text-xs text-center text-white break-words">{meeting.organizer}</h3>
+          <h3 className={`text-xs text-center ${getTextColor(bgColor)} break-words`}>{meeting.organizer}</h3>
         </div>
         <div>
           <div className="flex items-center justify-center border-b border-zinc-200 bg-zinc-50 py-1">
@@ -178,6 +338,7 @@ export default function MeetingBlock({
             </div>
           </div>
         </div>
+        <InfoButton />
       </div>
     )
   } else if (isDivided && isSmallBlock) {
@@ -192,10 +353,11 @@ export default function MeetingBlock({
         }}
       >
         <div className="flex flex-col h-full justify-between p-1">
-          <h3 className="font-medium text-[10px] text-white text-center break-words">{meeting.name}</h3>
+          <h3 className={`font-medium text-[10px] ${getTextColor(bgColor)} text-center break-words`}>{meeting.name}</h3>
           <div className="text-[8px] text-zinc-500 mt-auto">{formatTime(meeting.startTime)}</div>
           <div className="text-[8px] text-zinc-500 mt-auto">{formatTime(meeting.endTime)}</div>
         </div>
+        <InfoButton />
       </div>
     )
   } else if (isDivided) {
@@ -215,6 +377,7 @@ export default function MeetingBlock({
           <div className="text-[8px] text-zinc-500 mt-auto">{formatTime(meeting.startTime)}</div>
           <div className="text-[8px] text-zinc-500 mt-auto">{formatTime(meeting.endTime)}</div>
         </div>
+        <InfoButton />
       </div>
     )
   } else {
@@ -228,7 +391,9 @@ export default function MeetingBlock({
           left,
         }}
       >
-        <div className={`w-full text-center text-sm text-white py-1.5 ${bgColor} flex items-center justify-center`}>
+        <div
+          className={`w-full text-center text-sm ${getTextColor(bgColor)} py-1.5 ${bgColor} flex items-center justify-center`}
+        >
           {meeting.organizer ? (
             <span className="px-2 break-words">{meeting.organizer}</span>
           ) : (
@@ -240,7 +405,9 @@ export default function MeetingBlock({
             isLongMeeting ? "items-center justify-center text-center" : ""
           }`}
         >
-          <div className={`w-14 p-1 flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}>
+          <div
+            className={`w-14 p-1 pt-3 flex-shrink-0 flex flex-col ${isLongMeeting ? "items-start justify-center" : ""} border-r border-zinc-200 bg-zinc-50`}
+          >
             <div className="text-[10px] text-black whitespace-nowrap">{formatTime(meeting.startTime)}</div>
             <div className="text-[10px] text-black whitespace-nowrap mt-1">{formatTime(meeting.endTime)}</div>
           </div>
@@ -254,6 +421,7 @@ export default function MeetingBlock({
             )}
           </div>
         </div>
+        <InfoButton />
       </div>
     )
   }
