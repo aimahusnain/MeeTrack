@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, CalendarIcon, Clock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { MEETING_TYPES } from "@/constants/meeting-types"
 
 interface AddMeetingModalProps {
   onClose: () => void
@@ -28,6 +29,7 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
   const [startTime, setStartTime] = useState<string>("")
   const [endTime, setEndTime] = useState<string>("")
   const [isEpt, setIsEpt] = useState(false)
+  const [meetingType, setMeetingType] = useState<string>("")
 
   // Generate available dates from the weeks
   const availableDates: { value: string; label: string; date: Date }[] = []
@@ -103,17 +105,9 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
       return
     }
 
-    // Generate random color
-    const colorOptions = [
-      "bg-lime-900",
-      "bg-blue-900",
-      "bg-amber-900",
-      "bg-emerald-900",
-      "bg-violet-900",
-      "bg-rose-900",
-      "bg-cyan-900",
-    ]
-    const randomColor = colorOptions[Math.floor(Math.random() * colorOptions.length)]
+    // Get color based on meeting type
+    const typeColors = meetingType ? MEETING_TYPES[meetingType as keyof typeof MEETING_TYPES] : null
+    const colorClass = typeColors ? `bg-[${typeColors.main}]` : "bg-zinc-700"
 
     // Create meeting object
     const meeting: Meeting = {
@@ -122,10 +116,10 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
       date: dateObj,
       startTime: startTimeObj,
       endTime: endTimeObj,
-      description,
+      description: meetingType || description, // Use meeting type as description if available
       organizer,
       location,
-      color: randomColor,
+      color: colorClass,
       isEpt,
     }
 
@@ -157,6 +151,24 @@ export default function AddMeetingModal({ onClose, onAdd, weeks }: AddMeetingMod
               placeholder="أدخل عنوان الاجتماع"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meetingType" className="text-zinc-300">
+              نوع الاجتماع
+            </Label>
+            <Select value={meetingType} onValueChange={setMeetingType}>
+              <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                <SelectValue placeholder="اختر نوع الاجتماع" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 border-zinc-700 max-h-[200px]">
+                {Object.keys(MEETING_TYPES).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

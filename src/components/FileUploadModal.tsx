@@ -9,7 +9,7 @@ import type { Meeting } from "@/types"
 import { AlertCircle, FileUp } from "lucide-react"
 import { useState } from "react"
 import * as XLSX from "xlsx"
-import { getColorClassByType } from "@/constants/meeting-types"
+import { MEETING_TYPES } from "@/constants/meeting-types"
 
 interface FileUploadModalProps {
   onClose: () => void
@@ -213,7 +213,10 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
 
         // Get color based on meeting type
         const meetingTypeStr = meetingType !== undefined ? String(meetingType) : ""
-        const colorClass = getColorClassByType(meetingTypeStr)
+
+        // Use the new color system
+        const typeColors = MEETING_TYPES[meetingTypeStr as keyof typeof MEETING_TYPES]
+        const colorClass = typeColors ? `bg-[${typeColors.main}]` : "bg-zinc-700"
 
         return {
           id: `import-${Date.now()}-${index}`,

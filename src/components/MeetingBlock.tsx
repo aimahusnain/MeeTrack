@@ -1,7 +1,7 @@
 "use client";
 
 import type { Meeting } from "@/types";
-import { Clock, ScanEye, MapPin, User } from "lucide-react";
+import { Clock, ScanEye, MapPin, User } from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import { MEETING_TYPES } from "@/constants/meeting-types";
 
 interface MeetingBlockProps {
   meeting: Meeting;
@@ -27,7 +28,7 @@ export default function MeetingBlock({
   availableWidth,
   totalMeetings = 1,
 }: MeetingBlockProps) {
-  // Replace with this new implementation that only considers very light colors
+  // Function to determine if a color is very light
   const isVeryLightColor = (color: string): boolean => {
     // Extract the color name from the Tailwind class
     const colorMatch =
@@ -80,6 +81,17 @@ export default function MeetingBlock({
       "bg-red-100",
       // Add specific colors that should have black text
       "bg-[#C8EEFD]", // Light blue color from your constants
+      "bg-[#E6F7FE]", // Background for conferences
+      "bg-[#95E2FD]", // Background for multilateral meetings
+      "bg-[#BFD4FD]", // Background for bilateral meetings
+      "bg-[#D9EFE4]", // Background for local events
+      "bg-[#CEEADF]", // Background for tourism meetings
+      "bg-[#C7EAEB]", // Background for committee meetings
+      "bg-[#DEDCEC]", // Background for private sector (international)
+      "bg-[#D4D9E4]", // Background for private sector (local)
+      "bg-[#C6D8D8]", // Background for other meetings
+      "bg-[#D7D7D7]", // Background for holidays
+      "bg-[#A9B7B7]", // Background for prayer/rest
     ];
 
     return veryLightColors.some((lightColor) => color.includes(lightColor));
@@ -88,6 +100,18 @@ export default function MeetingBlock({
   // Get text color based on background color
   const getTextColor = (bgColor: string): string => {
     return isVeryLightColor(bgColor) ? "text-black" : "text-white";
+  };
+
+  // Get background color based on meeting type (description)
+  const getBackgroundColor = (): string => {
+    if (!meeting.description) return "bg-white";
+    
+    const meetingType = meeting.description as keyof typeof MEETING_TYPES;
+    const typeColors = MEETING_TYPES[meetingType];
+    
+    if (!typeColors) return "bg-white";
+    
+    return `bg-[${typeColors.background}]`;
   };
 
   let topPosition: number;
@@ -119,6 +143,7 @@ export default function MeetingBlock({
 
   const bgColor = meeting.color || "bg-lime-950";
   const borderColor = bgColor.replace("bg-", "border-");
+  const backgroundColorClass = getBackgroundColor();
 
   const isShortMeeting = durationInMinutes <= 60;
   const isSmallBlock = height < 150;
@@ -174,124 +199,126 @@ export default function MeetingBlock({
     !isShortMeeting &&
     height >= 80 &&
     !isDivided;
-    const InfoButton = () => (
-      <Dialog>
-        <DialogTrigger asChild>
-          <button
-            className="absolute bottom-2 right-2 p-1 rounded-md bg-zinc-800/50 backdrop-blur-xl hover:bg-zinc-700 text-white shadow-lg z-30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ScanEye className="h-3 w-3" />
-          </button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-lg border-0 p-0 shadow-xl rounded-xl overflow-hidden bg-white" dir="rtl">
-          {/* Header */}
-          <div className={`${bgColor} ${getTextColor(bgColor)} px-5 py-4 flex justify-between items-center`}>
-            <DialogTitle className="text-lg font-medium">{meeting.name}</DialogTitle>
-            <DialogClose className="rounded-full p-1 hover:bg-white/20 transition-colors">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </DialogClose>
-          </div>
-          
-          {/* Content - 2 rows layout */}
-          <div className="p-5 space-y-4">
-            {/* First row - Time information */}
-            <div className="bg-zinc-50 p-4 rounded-lg w-full">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-8">
-                <div className="mb-4 sm:mb-0">
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت البدء</p>
-                  <div className="flex items-center justify-end">
-                    <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.startTime)}</span>
-                  </div>
+
+  const InfoButton = () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className="absolute bottom-2 right-2 p-1 rounded-md bg-zinc-800/50 backdrop-blur-xl hover:bg-zinc-700 text-white shadow-lg z-30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ScanEye className="h-3 w-3" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg border-0 p-0 shadow-xl rounded-xl overflow-hidden bg-white" dir="rtl">
+        {/* Header */}
+        <div className={`${bgColor} ${getTextColor(bgColor)} px-5 py-4 flex justify-between items-center`}>
+          <DialogTitle className="text-lg font-medium">{meeting.name}</DialogTitle>
+          <DialogClose className="rounded-full p-1 hover:bg-white/20 transition-colors">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </DialogClose>
+        </div>
+        
+        {/* Content - 2 rows layout */}
+        <div className="p-5 space-y-4">
+          {/* First row - Time information */}
+          <div className="bg-zinc-50 p-4 rounded-lg w-full">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-8">
+              <div className="mb-4 sm:mb-0">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت البدء</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.startTime)}</span>
                 </div>
-                
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت الانتهاء</p>
-                  <div className="flex items-center justify-end">
-                    <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.endTime)}</span>
-                  </div>
+              </div>
+              
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">وقت الانتهاء</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{formatTime(meeting.endTime)}</span>
                 </div>
               </div>
             </div>
-            
-            {/* Second row - 2 columns */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* First column - Organizer */}
-              {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" ? (
-                <div className="bg-zinc-50 p-3 rounded-lg">
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">المنظّم</p>
-                  <div className="flex items-center justify-end">
-                    <span className="text-sm font-medium text-zinc-900">{meeting.organizer}</span>
-                    <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-3 w-3"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="hidden sm:block" /> // Empty placeholder for grid alignment when no organizer
-              )}
-              
-              {/* Second column - Location */}
-              {meeting.location && (
-                <div className="bg-zinc-50 p-3 rounded-lg">
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">الموقع</p>
-                  <div className="flex items-center justify-end">
-                    <span className="text-sm font-medium text-zinc-900">{meeting.location}</span>
-                    <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-3 w-3"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Close button */}
-            <div className="mt-5 flex justify-end">
-              <DialogClose className="px-4 py-2 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
-                إغلاق
-              </DialogClose>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    );
+          
+          {/* Second row - 2 columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* First column - Organizer */}
+            {meeting.organizer && meeting.organizer !== "undefined" && meeting.organizer !== "غير متوفر" ? (
+              <div className="bg-zinc-50 p-3 rounded-lg">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">المنظّم</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{meeting.organizer}</span>
+                  <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="hidden sm:block" /> // Empty placeholder for grid alignment when no organizer
+            )}
+            
+            {/* Second column - Location */}
+            {meeting.location && (
+              <div className="bg-zinc-50 p-3 rounded-lg">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">الموقع</p>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-medium text-zinc-900">{meeting.location}</span>
+                  <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 mr-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Close button */}
+          <div className="mt-5 flex justify-end">
+            <DialogClose className="px-4 py-2 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+              إغلاق
+            </DialogClose>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
+  // Different layouts based on meeting duration and position
   if (isShortMeeting) {
     return (
       <div
@@ -318,7 +345,7 @@ export default function MeetingBlock({
   } else if (useTwoColumnLayout) {
     return (
       <div
-        className={`absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg bg-white border-r-4 ${borderColor}`}
+        className={`absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg ${backgroundColorClass} border-r-4 ${borderColor}`}
         style={{
           top: `${topPosition}px`,
           height: `${Math.max(height, 25)}px`,
@@ -361,7 +388,7 @@ export default function MeetingBlock({
   } else if (isDivided && !isSmallBlock) {
     return (
       <div
-        className="absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg bg-white"
+        className={`absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg ${backgroundColorClass}`}
         style={{
           top: `${topPosition}px`,
           height: `${Math.max(height, 25)}px`,
@@ -429,7 +456,7 @@ export default function MeetingBlock({
   } else if (isDivided) {
     return (
       <div
-        className="absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg bg-white"
+        className={`absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg ${backgroundColorClass}`}
         style={{
           top: `${topPosition}px`,
           height: `${Math.max(height, 25)}px`,
@@ -455,7 +482,7 @@ export default function MeetingBlock({
   } else {
     return (
       <div
-        className="absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg bg-white"
+        className={`absolute rounded-md shadow-md overflow-hidden z-10 transition-all hover:z-20 hover:shadow-lg ${backgroundColorClass}`}
         style={{
           top: `${topPosition}px`,
           height: `${Math.max(height, 25)}px`,
@@ -475,9 +502,7 @@ export default function MeetingBlock({
           )}
         </div>
         <div
-          className={`flex h-full border-t border-zinc-200 ${
-            isLongMeeting ? "items-center justify-center text-center" : ""
-          }`}
+          className={`flex h-full border-t border-zinc-200`}
         >
           <div
             className={`w-14 p-1 pt-3 flex-shrink-0 flex flex-col ${
