@@ -375,7 +375,7 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
           {preview.length > 0 && (
             <div className="md:hidden bg-zinc-100 rounded-md p-3 text-center">
               <p className="text-zinc-700 text-sm">
-                تم تحميل الملف بنجاح. اضغط على "استيراد الاجتماعات" لإكمال العملية.
+                تم تحميل الملف بنجاح. اضغط على &quot;استيراد الاجتماعات&quot; لإكمال العملية.
               </p>
             </div>
           )}
