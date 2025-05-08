@@ -83,13 +83,13 @@ export default function Home() {
               <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1" />
               <span>استيراد</span>
             </Button>
-            <Button
+            {/* <Button
               onClick={() => setIsAddModalOpen(true)}
               className="bg-[#0D4E1E] hover:bg-lime-700 text-zinc-100 text-sm sm:text-base px-2 sm:px-3 py-1 flex-1 sm:flex-none"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-1" />
               <span>إضافة اجتماع</span>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </header>
