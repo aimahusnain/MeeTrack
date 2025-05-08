@@ -175,7 +175,7 @@ export default function Calendar({ week, meetings, arabicDates = [] }: CalendarP
                   })}
 
                   {/* Render meeting groups */}
-                  {meetingGroups.map((group, groupIndex) => {
+                  {meetingGroups.map((group) => {
                     // Determine layout type based on number of meetings in this group
                     const layoutType = getLayoutType(group.length)
 
