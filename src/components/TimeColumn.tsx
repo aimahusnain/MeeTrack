@@ -1,56 +1,56 @@
-// src/components/TimeColumn.tsx
 interface TimeColumnProps {
-  timeSlots: string[];
-  timeSlotHeight: number;
+  timeSlots: string[]
+  timeSlotHeight: number
 }
 
 export default function TimeColumn({ timeSlots, timeSlotHeight }: TimeColumnProps) {
+  // Convert 24-hour format times to 12-hour format with ص/م
+  const format12Hour = (time24h: string): string => {
+    const [hourStr, minuteStr] = time24h.split(":")
+    const hour = Number.parseInt(hourStr, 10)
+    const minute = Number.parseInt(minuteStr, 10)
+
+    const hour12 = hour % 12 || 12
+    const amPm = hour < 12 ? "ص" : "م"
+
+    return `${hour12}:${minute.toString().padStart(2, "0")} ${amPm}`
+  }
+
   return (
-    <div className="w-16 sm:w-24 bg-zinc-900 border-r border-zinc-800 flex-shrink-0">
+    <div className="w-16 sm:w-32 bg-[#025F5F] flex-shrink-0">
       <div className="h-16"></div> {/* Spacer for day header */}
       <div>
         {timeSlots.map((time, i) => {
-          const isFullHour = time.endsWith('00');
-          const isHalfHour = time.endsWith('30');
-          const is15Min = time.endsWith('15') || time.endsWith('45');
-          
+          const formattedTime = format12Hour(time)
+          const minute = time.split(":")[1]
+
+          // Styling based on time
+          let textSizeClass = "text-sm text-gray-100"
+          if (minute === "15" || minute === "45") {
+            textSizeClass = "text-[10px] mb-6 text-gray-400"
+          } else if (minute === "30") {
+            textSizeClass = "text-[13px] text-gray-300"
+          }
+
+          // Hide border for :00 and :30
+          const hideBorder = minute === "00" || minute === "30"
+
           return (
-            <div 
-              key={i} 
-              className="relative"
-              style={{ height: `${timeSlotHeight}px` }}
-            >
-              {/* Text positioned at the bottom of the previous cell, above the line */}
-              {isFullHour && (
-                <span className="absolute bottom-0 right-2 text-zinc-300 text-sm font-medium whitespace-nowrap transform translate-y-[-50%]">
-                  {time.split(':')[0]}
-                </span>
-              )}
-              {isHalfHour && (
-                <span className="absolute bottom-0 right-2 text-zinc-400 text-xs whitespace-nowrap transform translate-y-[-50%]">
-                  {time}
-                </span>
-              )}
-              {is15Min && (
-                <span className="absolute bottom-0 right-2 text-zinc-500 text-xs whitespace-nowrap transform translate-y-[-50%]">
-                  {time}
-                </span>
-              )}
-              
-              {/* Border line at the bottom of the cell */}
-              <div 
-                className={`absolute bottom-0 w-full ${
-                  isFullHour 
-                    ? 'border-b border-zinc-700 bg-zinc-800/20' 
-                    : isHalfHour 
-                      ? 'border-b border-zinc-800' 
-                      : 'border-b border-zinc-800/50'
-                }`}
-              ></div>
+            <div key={i} className="relative" style={{ height: `${timeSlotHeight}px` }}>
+              <span className={`absolute bottom-0 right-2 mb-5 ${textSizeClass} font-medium whitespace-nowrap`}>
+                {formattedTime}
+              </span>
+
+              {!hideBorder && (
+  <div className="absolute bottom-0 left-0 w-full h-[1px]">
+    <div className="w-full h-full bg-gradient-to-r from-gray-300/100 via-gray-300/0"></div>
+  </div>
+)}
+
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

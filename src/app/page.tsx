@@ -1,157 +1,111 @@
-// src/app/page.tsx
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import Calendar from '@/components/Calendar';
-import AddMeetingModal from '@/components/AddMeetingModal';
-import { Meeting, WeekData } from '@/types';
-import { Button } from "@/components/ui/button";
-import { CalendarIcon, Plus } from "lucide-react";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState } from "react"
+import Calendar from "@/components/Calendar"
+import AddMeetingModal from "@/components/AddMeetingModal"
+import FileUploadModal from "@/components/FileUploadModal"
+import type { Meeting, WeekData } from "@/types"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon, Plus, Upload } from "lucide-react"
 
 export default function Home() {
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentWeek, setCurrentWeek] = useState(0);
-  const [weeks, setWeeks] = useState<WeekData[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [meetings, setMeetings] = useState<Meeting[]>([])
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [arabicDates, setArabicDates] = useState<string[]>([])
+  const [hasImportedData, setHasImportedData] = useState(false)
 
-  useEffect(() => {
-    generateWeeks(parseInt(selectedMonth), parseInt(selectedYear));
-  }, [selectedMonth, selectedYear]);
-
-  const generateWeeks = (month: number, year: number) => {
-    // Get the first day of the month
-    const firstDay = new Date(year, month, 1);
-    
-    // Get the last day of the month
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Find the first Sunday before or on the first day of the month
-    const firstSunday = new Date(firstDay);
-    firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
-    
-    const generatedWeeks: WeekData[] = [];
-    const currentDate = new Date(firstSunday);
-    
-    // Generate weeks until we go past the end of the month
-    while (currentDate <= lastDay || generatedWeeks.length < 6) {
-      const weekStartDate = new Date(currentDate);
-      const weekEndDate = new Date(currentDate);
-      weekEndDate.setDate(weekEndDate.getDate() + 6);
-      
-      generatedWeeks.push({
-        weekNumber: getWeekNumber(weekStartDate),
-        startDate: weekStartDate,
-        endDate: weekEndDate
-      });
-      
-      // Move to next week
-      currentDate.setDate(currentDate.getDate() + 7);
-      
-      // Limit to 6 weeks max
-      if (generatedWeeks.length >= 6) break;
-    }
-    
-    setWeeks(generatedWeeks);
-    setCurrentWeek(0);
-  };
-
-  const getWeekNumber = (date: Date) => {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-  };
+  // Create a single week that will be updated when file is imported
+  const [currentWeek, setCurrentWeek] = useState<WeekData>({
+    weekNumber: 1,
+    startDate: new Date(),
+    endDate: new Date(),
+  })
 
   const addMeeting = (meeting: Meeting) => {
-    setMeetings([...meetings, meeting]);
-    setIsModalOpen(false);
-  };
+    setMeetings([...meetings, meeting])
+    setIsAddModalOpen(false)
+  }
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
+  const importMeetings = (importedMeetings: Meeting[], importedArabicDates: string[]) => {
+    // Set the imported meetings
+    setMeetings(importedMeetings)
 
-  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 1 + i).toString());
+    // Set the Arabic dates
+    setArabicDates(importedArabicDates)
+
+    // Find the earliest and latest dates from the imported meetings
+    if (importedMeetings.length > 0) {
+      // Sort meetings by date
+      const sortedMeetings = [...importedMeetings].sort((a, b) => a.date.getTime() - b.date.getTime())
+
+      // Get the earliest and latest dates
+      const earliestDate = new Date(sortedMeetings[0].date)
+      const latestDate = new Date(sortedMeetings[sortedMeetings.length - 1].date)
+
+      // Set the current week to span from earliest to latest date
+      setCurrentWeek({
+        weekNumber: 1,
+        startDate: earliestDate,
+        endDate: latestDate,
+      })
+
+      setHasImportedData(true)
+    }
+
+    setIsImportModalOpen(false)
+
+    // Show success notification
+    alert(`تم استيراد ${importedMeetings.length} اجتماعات بنجاح`)
+  }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="bg-zinc-900 border-b border-zinc-800 p-4 shadow-md">
+    <main className="min-h-screen bg-zinc-100" dir="rtl">
+      <header className="bg-white border-b border-zinc-200 p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-lime-400 flex items-center">
-            <CalendarIcon className="h-6 w-6 mr-2" />
-            MeeTrack
+          <h1 className="text-2xl font-bold text-[#0C4C1E] flex items-center">
+            <CalendarIcon className="h-6 w-6 ml-2" />
+            جدول الاجتماعات
           </h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Select
-                value={selectedMonth}
-                onValueChange={(value) => setSelectedMonth(value)}
-              >
-                <SelectTrigger className="w-[140px] bg-zinc-800 border-zinc-700">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700">
-                  {months.map((month, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={selectedYear}
-                onValueChange={(value) => setSelectedYear(value)}
-              >
-                <SelectTrigger className="w-[100px] bg-zinc-800 border-zinc-700">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700">
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-lime-600 hover:bg-lime-700 text-zinc-100"
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsImportModalOpen(true)}
+              variant="outline"
+              className="border-zinc-300 bg-zinc-200 hover:bg-zinc-200"
             >
-              <Plus className="h-5 w-5 mr-1" />
-              Add Meeting
+              <Upload className="h-4 w-4 ml-1" />
+              استيراد
+            </Button>
+
+            <Button onClick={() => setIsAddModalOpen(true)} className="bg-[#0D4E1E] hover:bg-lime-700 text-zinc-100">
+              <Plus className="h-5 w-5 ml-1" />
+              إضافة اجتماع
             </Button>
           </div>
         </div>
       </header>
-      
+
       <div className="container mx-auto p-4">
-        <Calendar 
-          weeks={weeks} 
-          meetings={meetings} 
-          currentWeek={currentWeek}
-          setCurrentWeek={setCurrentWeek}
-        />
+        {hasImportedData ? (
+          <Calendar week={currentWeek} meetings={meetings} arabicDates={arabicDates} />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[60vh] bg-zinc-200 rounded-lg border border-zinc-300 p-8">
+            <Upload className="h-16 w-16 text-zinc-700 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">لا توجد بيانات</h2>
+            <p className="text-zinc-500 text-center mb-6">قم بتحميل ملف XLSM لعرض جدول الاجتماعات</p>
+            <Button onClick={() => setIsImportModalOpen(true)} className="bg-[#025F5F] hover:bg-[#014242] text-zinc-100">
+              <Upload className="h-4 w-4 ml-1" />
+              استيراد ملف
+            </Button>
+          </div>
+        )}
       </div>
-      
-      {isModalOpen && (
-        <AddMeetingModal 
-          onClose={() => setIsModalOpen(false)} 
-          onAdd={addMeeting}
-          weeks={weeks}
-        />
+
+      {isAddModalOpen && (
+        <AddMeetingModal onClose={() => setIsAddModalOpen(false)} onAdd={addMeeting} weeks={[currentWeek]} />
       )}
+
+      {isImportModalOpen && <FileUploadModal onClose={() => setIsImportModalOpen(false)} onImport={importMeetings} />}
     </main>
-  );
+  )
 }
