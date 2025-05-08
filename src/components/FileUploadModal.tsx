@@ -335,8 +335,9 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
             </div>
           )}
 
+          {/* Preview section - Now only visible on non-mobile screens */}
           {preview.length > 0 && (
-            <div className="bg-zinc-100 rounded-md p-3 overflow-x-auto">
+            <div className="hidden md:block bg-zinc-100 rounded-md p-3 overflow-x-auto">
               <p className="text-zinc-900 font-medium mb-2">معاينة:</p>
               <table className="w-full text-sm">
                 <thead>
@@ -367,6 +368,15 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
                 </tbody>
               </table>
               {preview.length > 5 && <p className="text-zinc-500 text-xs mt-2">عرض أول 5 صفوف...</p>}
+            </div>
+          )}
+
+          {/* Mobile message when preview is available but hidden */}
+          {preview.length > 0 && (
+            <div className="md:hidden bg-zinc-100 rounded-md p-3 text-center">
+              <p className="text-zinc-700 text-sm">
+                تم تحميل الملف بنجاح. اضغط على "استيراد الاجتماعات" لإكمال العملية.
+              </p>
             </div>
           )}
         </div>
