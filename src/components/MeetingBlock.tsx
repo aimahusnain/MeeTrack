@@ -2,7 +2,7 @@
 
 import type { Meeting } from "@/types"
 import { Clock, ScanEye, MapPin, User } from "lucide-react"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog"
 
 interface MeetingBlockProps {
   meeting: Meeting
