@@ -294,7 +294,7 @@ export default function FileUploadModal({ onClose, onImport }: FileUploadModalPr
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="bg-white border-zinc-100 md:max-w-2xl">
+      <DialogContent className="bg-white border-zinc-100 md:max-w-2xl h-[92vh] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center justify-between">
             استيراد الاجتماعات
