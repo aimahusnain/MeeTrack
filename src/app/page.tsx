@@ -6,7 +6,7 @@ import AddMeetingModal from "@/components/AddMeetingModal";
 import FileUploadModal from "@/components/FileUploadModal";
 import type { Meeting, WeekData } from "@/types";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Plus, Upload } from "lucide-react";
+import { CalendarIcon, Upload } from "lucide-react";
 
 export default function Home() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
